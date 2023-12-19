@@ -20,8 +20,7 @@ public with sharing class StockItemHandler {
         List<Case> casesToInsert = new List <Case>();
         
         for (Stock_Item__c stockItem : itemDeleted){
-            /* LT - updated >0 to !=0. Negative values are currently not allowed  with the reasoning that if the field allowed for negative values the case would still be created
-			(for example: backlogged or out of stock items with oustanding orders, which could be captured )*/
+            // LT - updated >0 to !=0, with the reasoning that since the field allows for negative values the case should be created anytime the stockItem is deleted when the Stock_on_Hand__c field is non-zero (for example: backlogged or out of stock items with oustanding orders, which could be captured )
             if(stockItem.Stock_on_Hand__C != 0){
                 Case c = new Case();
                 c.Status = 'New';
