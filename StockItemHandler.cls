@@ -3,14 +3,18 @@ public with sharing class StockItemHandler {
     //AB - call a method for a before insert
     
     public static void stockBeforeInsert(List<Stock_Item__c> newStock){
-        //LT - changed from list to set, to force unique values without SOQL query
-        //LT - removed SOQL query and restructured for loop to if/else
         Set<String> stockNames = new Set<string>(); 
-        for (Stock_Item__c newItem : newStock) {
-            if (stockNames.contains(newItem.Name)) {
+        for (Stock_Item__c existingStock : [
+            SELECT Item_Name__c FROM Stock_Item__c]){
+                stockNames.add(existingStock.Item_Name__c);
+            }
+        for (Stock_Item__c newItem: newStock){  
+            if (stockNames.contains(newItem.Item_Name__c)) {
+                //changed the name change to addError to prevent duplicative records from being created
                 newItem.addError('A Stock Item with this name already exists.');
+                System.debug('Duplicate found for ' + newItem.Item_Name__c);
             } else {
-                stockNames.add(newItem.Name);
+                stockNames.add(newItem.Item_Name__c);
             }
         }
     }
