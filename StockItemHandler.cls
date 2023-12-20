@@ -1,18 +1,16 @@
-//From Alyssa Buda's Gist: https://gist.github.com/alyssabuda/4d00d577efb45c4b0da46a0704e3ae1f
 public with sharing class StockItemHandler {
-    //added with sharing 
-    //call a method for a before insert
+    //AB - added with sharing 
+    //AB - call a method for a before insert
     
     public static void stockBeforeInsert(List<Stock_Item__c> newStock){
-        
-        List<String> stockNames = new List <string>(); 
-        for (Stock_Item__c existingStock : [SELECT Id, Name, Description__c, Item_Name__c from Stock_Item__c]){
-            stockNames.add(existingStock.Item_Name__c);
-        }
-        
-        for (Stock_Item__c newItem : newStock){
-            if(stockNames.contains(newItem.Item_Name__c)){
-                newItem.Item_Name__c = newItem.Item_Name__c + ' Duplicate Item';
+        //LT - changed form list to set, to force unique values without SOQL query
+        //LT - removed SOQL query and restructured for loop to if/else
+        Set<String> stockNames = new Set<string>(); 
+        for (Stock_Item__c newItem : newStock) {
+            if (stockNames.contains(newItem.Name)) {
+                newItem.addError('A Stock Item with this name already exists.');
+            } else {
+                stockNames.add(newItem.Name);
             }
         }
     }
@@ -22,22 +20,21 @@ public with sharing class StockItemHandler {
         List<Case> casesToInsert = new List <Case>();
         
         for (Stock_Item__c stockItem : itemDeleted){
-            if(stockItem.Stock_on_Hand__C > 0){
+            // LT - updated >0 to !=0, with the reasoning that since the field allows for negative values the case should be created anytime the stockItem is deleted when the Stock_on_Hand__c field is non-zero (for example: backlogged or out of stock items with oustanding orders, which could be captured )
+            if(stockItem.Stock_on_Hand__C != 0){
                 Case c = new Case();
                 c.Status = 'New';
                 c.OwnerId = stockItem.OwnerId; 
                 c.Origin = 'Stock Deletion';
-                c.Subject = 'Item Deleted With Remaining Stock';
+                c.Subject = 'Alert: Item Deleted With Remaining Stock';
                 c.Description = 'Stock Item Name: ' + stockItem.Item_Name__c + 
-                    			' Stock Item ID:' + stockItem.id +
-                  			    ' Quantity on Hand:' + stockItem.Stock_on_Hand__c; 
+                    ' Stock Item ID:' + stockItem.id +
+                    ' Quantity on Hand:' + stockItem.Stock_on_Hand__c; 
                 casesToInsert.add(c);
                 
             }
-            
-            insert casesToInsert;
         }
-        
-    }
-    
+        // LT - moved this outside of the for loop to avoid a DML within loop
+        insert casesToInsert;
+    } 
 }
