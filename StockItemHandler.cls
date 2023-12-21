@@ -10,7 +10,7 @@ public with sharing class StockItemHandler {
             }
         for (Stock_Item__c newItem: newStock){  
             if (stockNames.contains(newItem.Item_Name__c)) {
-                //changed the name change to addError to prevent duplicative records from being created
+                //LT - changed the name change to addError to prevent duplicative records from being created
                 newItem.addError('A Stock Item with this name already exists.');
                 System.debug('Duplicate found for ' + newItem.Item_Name__c);
             } else {
@@ -20,11 +20,11 @@ public with sharing class StockItemHandler {
     }
     
     public static void stockBeforeDelete(List<Stock_Item__c> itemDeleted, Map<Id, Stock_Item__c> deletedMap){
-        \\AB - renamed to stockBeforeDelete 
+        //AB - renamed to stockBeforeDelete 
         List<Case> casesToInsert = new List <Case>();
         
         for (Stock_Item__c stockItem : itemDeleted){
-            /* LT - updated >0 to !=0. Negative values are currently not allowed  with the reasoning that if the field allowed for negative values the case would still be created
+            /* LT - updated >0 to !=0. Negative stock values are accepted, we want the case to still be created.
 			(for example: backlogged or out of stock items with oustanding orders, which could be captured )*/
             if(stockItem.Stock_on_Hand__C != 0){
                 Case c = new Case();
@@ -33,8 +33,8 @@ public with sharing class StockItemHandler {
                 c.Origin = 'Stock Deletion';
                 c.Subject = 'Alert: Item Deleted With Remaining Stock';
                 c.Description = 'Stock Item Name: ' + stockItem.Item_Name__c + '\n'+
-                                    ' Stock Item ID:' + stockItem.id + '\n' +
-                                        ' Quantity on Hand:' + stockItem.Stock_on_Hand__c; 
+                                    ' Stock Item ID: ' + stockItem.id + '\n' +
+                                        ' Quantity on Hand: ' + stockItem.Stock_on_Hand__c; 
                 casesToInsert.add(c);
                 //AB - added '\n' to insert line breaks in description 
             }
@@ -53,7 +53,9 @@ public with sharing class StockItemHandler {
                                                 lowStockItems.add(stockItem);
                                             }
                                         }
-        
+        //Print the lowStockItems to the debug log
+        System.debug('Low Stock Items: ' + lowStockItems);
+       
         return lowStockItems;
     }
 }
