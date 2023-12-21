@@ -1,0 +1,19 @@
+//Run in execute anonymous to create records
+// Define a new Stock_Item__c record
+Stock_Item__c newStockItem = new Stock_Item__c(
+    Description__c =
+    Item_Name__c = 
+    // Item_Stock_is_Low__c is auto-calculated
+    List_Price__c = 
+    Minimum_Stock_Level__c = 
+    Stock_on_Hand__c = 
+);
+
+// Insert the new Stock_Item__c record
+try {
+    insert newStockItem;
+    System.debug('Stock Item record inserted successfully!');
+//added catch for duplicate rule
+} catch (DMLException e) {
+    System.debug('An error occurred while inserting the Stock Item record: ' + e.getMessage());
+}
